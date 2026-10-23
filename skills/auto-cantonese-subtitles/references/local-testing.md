@@ -1,5 +1,7 @@
 # 本地测试入口
 
+运行前先按 [environment-recovery.md](environment-recovery.md) 检查已有环境和本机记录；按 [task-progress.md](task-progress.md) 显示并保存进度。下面的安装说明只用于缺失的部分，不能因模型在缓存里却没有在新环境中安装依赖，就重复创建整套环境。下载完成、依赖导入通过、模型加载成功分别记录。
+
 需要 Python、FFmpeg、FFprobe。Whisper 使用 `faster-whisper`（完整版 large-v3 的 CTranslate2 权重）；Qwen 使用 `qwen-asr`、PyTorch 及 Qwen3-ForcedAligner-0.6B。可用独立环境安装，勿修改系统 Python。依赖记录在 `scripts/requirements.txt`，安装时核对 Python/平台兼容性。`scripts/prepare_models.py --manifest /absolute/models.json` 下载并记录快照，实际加载另行验证。
 
 准备阶段用 huggingface_hub.snapshot_download 下载以下仓库，记录快照路径：
