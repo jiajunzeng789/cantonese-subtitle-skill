@@ -1,100 +1,53 @@
 # 粤语字幕制作skill
 
-把粤语音频或视频制作成**简体中文书面语、单行、无句读标点、带时间轴的 SRT 字幕**。面向汽车媒体的口播、试驾和多人对话，也可以用于其他粤语内容。
+## 用 WorkBuddy 等国产 AI Agent 怎么做字幕？
 
-由支持本地文件和终端的智能体执行：先用本地 Whisper large-v3 和 Qwen3-ASR-1.7B 交叉识别，再由当前智能体校准文字、核对专名、按成片画幅断句，最后导出字幕。
+在 **WorkBuddy、QoderWork、TRAE** 等能读取本地文件、执行程序的桌面 AI Agent 中，可以参照下面的通用流程。音视频在本地识别，文字校准使用当前 Agent 的语言模型。
 
-项目中文名称：**粤语字幕制作skill**。GitHub 仓库名：`cantonese-subtitle-skill`。Skill 调用名：`auto-cantonese-subtitles`。
+### 第一步：打开一个本地工作文件夹
 
-## 给同事的快速上手方法
+新建一个文件夹，在 Agent 中将它选为本次任务的工作目录。软件需要能够读取你的素材并运行本地程序。
 
-1. 下载本仓库 ZIP 并解压，或使用 Git 克隆到电脑。
-2. 在能操作本地文件和终端的智能体软件中打开该文件夹。下面提供 Codex 安装方法，以及适用于其他智能体的直接读取方法。
-3. 首次使用，复制下面的“准备环境”指令，让智能体检查 Python、FFmpeg 和模型。首次下载需要联网和足够磁盘空间。
-4. 准备好之后提供本地音视频路径，复制“开始制作”指令。只有音频时，还需要说明最终做横屏还是竖屏。
-5. 把收到的 SRT 导入剪辑软件，与原视频一起预览。字体、字号及安全区应与制作时约定一致。
-
-仓库地址：[粤语字幕制作skill](https://github.com/jiajunzeng789/cantonese-subtitle-skill)。仓库已公开，可以直接浏览、下载 ZIP 或克隆。
-
-```sh
-git clone https://github.com/jiajunzeng789/cantonese-subtitle-skill.git
-cd cantonese-subtitle-skill
-```
-
-项目不附带模型权重、测试音视频、个人词库或本机环境；每台电脑需要分别准备。
-
-### 第一次：准备环境
-
-把下面整段话发给智能体，把“本项目”替换为实际解压目录也可以：
+### 第二步：复制这段话，让 AI 帮你准备
 
 ```text
-请阅读本项目 README.md 和 skills/auto-cantonese-subtitles/SKILL.md。
-我要在本机使用“粤语字幕制作skill”。
-请按 references/local-testing.md 检查并准备独立 Python 环境、FFmpeg、FFprobe、Whisper large-v3 和 Qwen3-ASR-1.7B。
-准备阶段可以下载公开依赖和模型，音视频识别必须在本地运行。
-不要修改系统 Python，不要上传我的音视频，不要默认改用云端识别服务。
-请记录本机的环境位置、模型目录和是否成功加载；先用我提供的30至60秒样本验证，再处理长片。
-如果当前软件不能运行本地程序，请说明缺少的能力。
+请帮我准备“粤语字幕制作skill”。
+项目地址：https://github.com/jiajunzeng789/cantonese-subtitle-skill
+请将项目下载到当前工作文件夹，读取 skills/auto-cantonese-subtitles/SKILL.md，按其中的流程执行。
+如果软件支持安装Skill，请安装完整技能文件夹；否则直接读取并使用，不要只复制SKILL.md。
+首次使用请帮我准备独立运行环境和本地识别模型，可以下载公开依赖和模型，不要修改系统Python。
+音视频必须在本地识别，不要上传到云端识别服务；文字校准使用你的语言能力。
+准备好后告诉我，我会提供音视频素材。
 ```
 
-### 每次使用：开始制作
+首次准备需要下载模型，耗时取决于电脑和网络。之后在同一台电脑上使用，可直接进行第三步。
+
+### 第三步：给它素材，直接说要什么
+
+把音视频放到工作文件夹里，告诉 AI 文件名；也可以提供电脑上的完整文件路径。然后发：
 
 ```text
-请使用“粤语字幕制作skill”处理这段素材：
-文件：填入本地音频或视频的完整路径
-输出目录：填入本地输出目录
-成片：按原视频画幅；如果最终裁成竖屏，则改填1080×1920
-术语资料：如有车型名单、配置表或团队姓名表，请一并读取
-
-要求：
-1. 本地运行Whisper large-v3和Qwen3-ASR-1.7B，保留两份原始结果，再交叉校准。
-2. 输出简体中文书面表达，不能保留粤语词汇和句式。
-3. 每条字幕只有一行，按成片画幅拆成自然完整的语义短句，不按固定字数硬切。
-4. 不出现句读标点，保留小数、百分号、负号和车型名称必需的符号。
-5. 核对品牌、车型、配置、人物名称、数字和否定条件，不能凭常识补写事实。
-6. 每个短句重新匹配原始声音位置，不能按字数平分时间；多人问答分开处理。
-7. 交付UTF-8 SRT、术语修订记录和必要的待审位置，说明实际完成了哪些同步检查。
-请先读取SKILL.md和相关references，再执行。
+请使用“粤语字幕制作skill”处理这个文件：填写文件名或完整路径。
+输出简体中文书面语SRT字幕，不要粤语表达，每条只有一行，不要句读标点，时间轴对齐原素材。
+成片画幅：按原视频；如果我要竖屏，则按1080×1920制作。
+汽车品牌、车型和人物姓名请核对，不确定的地方单独告诉我。
+请将结果保存在工作文件夹里。
 ```
 
-只有音频时，把成片填写为“横屏”或“竖屏”。需要两个版本时写“分别制作横屏和竖屏两版”，每版独立断句。
+只有音频时，把“成片画幅”改成“横屏”或“竖屏”。有车型名单、配置表或团队姓名表，也可以一起提供。
 
-## 在不同智能体中使用
+**完成后，拿到 `.srt` 文件，导入剪映、Premiere 等剪辑软件即可使用。** 导入后预览一下时间和字号，确认画面上保持单行。
 
-### Codex：安装为个人 Skill
+上面采用直接读取技能的通用方式，不依赖各软件的具体安装按钮。产品功能可参考 [WorkBuddy 官方介绍](https://cloud.tencent.com/product/workbuddy)、[QoderWork 技能说明](https://docs.qoder.com/qoderwork/skills)、[TRAE SOLO 官方介绍](https://www.trae.ai/blog/new_solo_beta_0331)；本项目尚未逐一验证各软件的完整运行环境。
 
-macOS/Linux 可以在仓库根目录执行下面的命令，把完整 Skill 文件夹复制到个人技能目录。Windows 用户可手动将同一文件夹复制到用户主目录下的 `.agents/skills/`。目标位置如果已有同名 Skill，请先比较版本并备份，不要直接覆盖。
+---
 
-```sh
-mkdir -p ~/.agents/skills
-cp -R skills/auto-cantonese-subtitles ~/.agents/skills/
-```
+<details>
+<summary>技术说明、手动安装与字幕标准（普通使用者可以跳过）</summary>
 
-然后在对话中输入：
+## Codex 手动安装
 
-```text
-使用 $auto-cantonese-subtitles 制作这段粤语视频的横屏单行简体书面语SRT字幕。
-素材路径：填入本地完整路径
-```
-
-也可以把 Skill 文件夹放到某个工作项目的 `.agents/skills/`，只供该项目使用。Codex 会发现这些目录中的技能；没有出现时可重启软件。安装目录和调用方式参考 [OpenAI 官方技能文档](https://learn.chatgpt.com/docs/build-skills)。
-
-### Claude Code、Cursor 及其他智能体：直接读取
-
-只要软件允许模型读取本地文件、调用终端并执行 Python，就可以先采用以下通用方式，不必依赖某个软件特有的 Skill 安装入口：
-
-```text
-请读取当前项目的 skills/auto-cantonese-subtitles/SKILL.md，
-把它作为本次粤语字幕任务的工作流程。
-相关references和scripts都在同一个Skill目录中，请按需读取并在本地执行。
-接下来处理我提供的音视频，输出单行无句读标点的简体书面语SRT。
-```
-
-若软件提供原生 Skill 功能，可以按该软件当前文档，将完整 `auto-cantonese-subtitles` 文件夹安装到指定目录。各软件安装目录和调用语法可能不同；上面的直接读取方式不依赖这些差异。
-
-`agents/openai.yaml` 是 Codex 的显示信息，其他智能体可以忽略。核心指令位于 `SKILL.md`。
-
-只有聊天窗口、无法执行本地程序的环境，需要额外连接本机运行环境，才能完成这里的本地识别流程。仅上传一个 `SKILL.md` 不会自动具备模型和音视频处理能力。
+把项目中的 `skills/auto-cantonese-subtitles` 完整文件夹复制到个人技能目录 `~/.agents/skills/`，或工作项目的 `.agents/skills/`，然后在对话中使用 `$auto-cantonese-subtitles`。目标位置已有同名技能时先备份。参考 [OpenAI 官方技能文档](https://learn.chatgpt.com/docs/build-skills)。
 
 ## 首次环境准备：给负责安装的人
 
@@ -249,3 +202,5 @@ skills/auto-cantonese-subtitles/
     ├── subtitle_profile.py     探测显示画幅
     └── export_srt.py           清理、检查并导出SRT
 ```
+
+</details>
