@@ -1,0 +1,4 @@
+interface:
+  display_name: "粤语字幕制作skill"
+  short_description: "本地识别粤语汽车音视频，按横竖屏生成单行无句读标点的简体书面语 SRT 字幕"
+  default_prompt: "使用 $auto-cantonese-subtitles 将这段粤语音视频转为适配成片画幅的单行无标点简体书面语 SRT，校准术语与时间轴。"
