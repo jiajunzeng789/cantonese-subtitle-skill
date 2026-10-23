@@ -2,34 +2,51 @@
 import json
 from pathlib import Path
 from huggingface_hub import snapshot_download
+from runtime_common import atomic_json
+
+
+def validate(path, name):
+    path = Path(path)
+    required = ['config.json', 'model.bin', 'tokenizer.json'] if name == 'whisper' else [
+        'config.json', 'tokenizer_config.json', 'preprocessor_config.json']
+    if any(not (path / file).is_file() for file in required):
+        raise RuntimeError(f'{name}: missing model configuration/weights/tokenizer')
+    index = path / 'model.safetensors.index.json'
+    if index.exists():
+        shards = set(json.loads(index.read_text())['weight_map'].values())
+        if any(not (path / shard).is_file() for shard in shards):
+            raise RuntimeError(f'{name}: incomplete weight shards')
+    elif not any(path.glob('*.safetensors')) and not (path / 'model.bin').is_file():
+        raise RuntimeError(f'{name}: missing weights')
 
 if __name__ == '__main__':
     import argparse
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--manifest', type=Path, required=True)
+    p.add_argument('--offline', action='store_true', help='Resolve existing local cache only; no downloads')
+    p.add_argument('--with-aligner', action='store_true', help='Optional forced aligner, not needed for text cross-checking')
     a = p.parse_args()
     if a.manifest.exists():
-        p.error('Manifest exists; choose a new output path.')
+        existing = json.loads(a.manifest.read_text())
+        for name in ['whisper', 'qwen'] + (['aligner'] if a.with_aligner else []):
+            validate(existing[name]['path'], name)
+        print('Reused local model manifest; files checked, loading not verified in this invocation.')
+        print(a.manifest.resolve())
+        raise SystemExit(0)
     repos = {
         'whisper': 'Systran/faster-whisper-large-v3',
         'qwen': 'Qwen/Qwen3-ASR-1.7B',
-        'aligner': 'Qwen/Qwen3-ForcedAligner-0.6B',
     }
+    if a.with_aligner:
+        repos['aligner'] = 'Qwen/Qwen3-ForcedAligner-0.6B'
     manifest = {}
     for name, repo in repos.items():
-        path = Path(snapshot_download(repo, allow_patterns=[
-            '*.json', '*.safetensors', '*.txt', '*.bin']))
-        index = path / 'model.safetensors.index.json'
-        if index.exists():
-            shards = set(json.loads(index.read_text())['weight_map'].values())
-            if any(not (path / shard).is_file() for shard in shards):
-                raise RuntimeError(f'{repo}: incomplete weight shards')
-        elif not any(path.glob('*.safetensors')) and not (path / 'model.bin').is_file():
-            raise RuntimeError(f'{repo}: missing weights')
+        print(f'Preparing {name}: {repo}; offline={a.offline}', flush=True)
+        path = Path(snapshot_download(repo, local_files_only=a.offline, allow_patterns=[
+            '*.json', '*.safetensors', '*.txt', '*.bin', '*.jinja', '*.model']))
+        validate(path, name)
         manifest[name] = {'repo': repo, 'path': str(path), 'snapshot': path.name,
                           'load_verified': False}
-    a.manifest.parent.mkdir(parents=True, exist_ok=True)
-    with a.manifest.open('x', encoding='utf-8') as f:
-        json.dump(manifest, f, ensure_ascii=False, indent=2)
+    atomic_json(a.manifest, manifest)
     print(a.manifest.resolve())
     print('Downloads checked; actual model loading still needs verification.')

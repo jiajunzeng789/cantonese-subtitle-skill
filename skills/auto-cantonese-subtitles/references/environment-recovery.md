@@ -1,5 +1,7 @@
 # 环境复用与故障恢复
 
+环境准备先执行[runtime-setup.md](runtime-setup.md)的`setup_runtime.py`，它提供统一的安装顺序、候选检查、真实解码自检、日志和独占锁。以下规则用于解释结果和处理脚本未能解决的问题，不另起一套任意版本的安装流程。实际自动记录字段以脚本输出为准，下面是扩展记录约定。
+
 ## 先检查，再安装
 
 1. 查当前工作目录 `.cantonese-subtitles/environment.local.json`、用户已提供的环境路径，以及此前明确记录的本机共享配置 `~/.config/cantonese-subtitles/environment.local.json`。共享配置不存在时不全盘搜索，也不假定开发者机器路径可用。用户没有提供素材时可以先检查环境，不将缺少素材报成安装失败。

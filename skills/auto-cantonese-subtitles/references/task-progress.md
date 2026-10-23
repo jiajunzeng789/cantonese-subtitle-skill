@@ -1,5 +1,7 @@
 # 任务清单与反馈
 
+安装和运行结果优先读取`setup_runtime.py`、`check_runtime.py`、`verify_models.py`及`transcribe.py`实际生成的进度与报告，具体位置见[runtime-setup.md](runtime-setup.md)。完整制作任务的清单由Agent汇总这些证据，不能只按对话中曾经说过“已安装”打勾。
+
 ## 状态与打勾依据
 
 | 显示 | 记录状态 | 含义 |

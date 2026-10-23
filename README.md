@@ -15,7 +15,7 @@
 项目地址：https://github.com/jiajunzeng789/cantonese-subtitle-skill
 请将项目下载到当前工作文件夹，读取 skills/auto-cantonese-subtitles/SKILL.md，按其中的流程执行。
 如果软件支持安装Skill，请安装完整技能文件夹；否则直接读取并使用，不要只复制SKILL.md。
-先检查并复用已有可用环境，缺少时再准备独立环境和本地识别模型，可以下载公开依赖和模型，不要修改系统Python。
+请统一运行项目的 scripts/setup_runtime.py（按实际Skill目录定位），先验证并复用已有环境，缺少时才分步安装，不要自行拼装pip命令或随意改版本；可以下载公开依赖和模型，不要修改系统Python。
 确需下载依赖时，优先检查清华等可信国内镜像并仅对本次安装使用，不修改全局设置；显示实际下载包名和进度，读不到时明确说明。
 音视频必须在本地识别，不要上传到云端识别服务；文字校准使用你的语言能力。
 请显示任务清单，检查通过一项就打勾；长任务报告当前进展，失败说明具体原因并保存中断点，不要无限重试。
@@ -64,33 +64,33 @@
 |---|---|---|
 | 第一份转写 | `Systran/faster-whisper-large-v3` | 完整版 large-v3 的 CTranslate2 权重 |
 | 第二份转写 | `Qwen/Qwen3-ASR-1.7B` | 显式指定 Cantonese |
-| 可选时间核对组件 | `Qwen/Qwen3-ForcedAligner-0.6B` | 当前短样本 Qwen 脚本会要求；结果需要检查 |
+| 可选时间核对组件 | `Qwen/Qwen3-ForcedAligner-0.6B` | 基础交叉识别无需下载；额外对齐结果需要检查 |
 | 媒体探测和音轨提取 | FFmpeg、FFprobe | 两个程序均需能从终端调用 |
 | 文字与语义校准 | 当前智能体的语言模型 | 比较原文、上下文和术语资料 |
 | 实际字体宽度测量 | Pillow | 配置字幕字体时使用 |
 
 设备需要容纳两个识别模型及可选对齐模型；实际内存、磁盘占用和运行速度依平台、缓存和音视频长度变化。依次运行两个模型可降低同时占用；先跑短样本判断本机是否适用。
 
-在仓库根目录创建独立环境，例如：
+在仓库根目录运行统一入口：
 
 ```sh
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r skills/auto-cantonese-subtitles/scripts/requirements.txt
-python -m pip install Pillow
-ffmpeg -version
-ffprobe -version
+python3 skills/auto-cantonese-subtitles/scripts/setup_runtime.py --workspace . --share
 ```
 
-Windows PowerShell 激活环境用 `.venv\Scripts\Activate.ps1`。FFmpeg、FFprobe 需单独安装并加入 PATH。PyTorch 的安装方式应匹配操作系统和 CPU/CUDA/MPS；安装失败时先核对平台支持，不要往系统环境反复混装。
+它会先检查已知环境，通过就复用；否则创建独立环境，分步安装固定关键版本，检查依赖、媒体工具和真实音频解码。不要在另一个终端同时为同一环境装包。FFmpeg和FFprobe需先按系统正常方式安装并加入PATH。
 
-下载模型并记录快照路径：
+准备模型时，用入口输出的实际Python路径运行 `prepare_models.py --manifest 模型清单路径`；默认只准备两个识别模型，ForcedAligner按需添加。模型清单有了之后，把它和短音频交给入口再检查：
 
 ```sh
-python skills/auto-cantonese-subtitles/scripts/prepare_models.py --manifest models.local.json
+python3 skills/auto-cantonese-subtitles/scripts/setup_runtime.py --workspace . --share \
+  --manifest /absolute/models.local.json --sample /absolute/sample.mp3
 ```
 
-脚本会下载三个模型，记录路径与快照；`load_verified: false` 表示只检查了下载文件，还需要实际加载。`models.local.json` 含本机路径，留在本机，不提交仓库。模型受各自模型仓库条款约束，本仓库不重新分发权重。
+这一步会复用环境，依次验证两模型加载，并识别素材开头至多12秒；不会把测试识别自动改写成发布字幕。没有提供模型清单时仅验证运行环境，没有提供样本时仅验证模型加载，进度报告会区分这些状态。
+
+完整参数、离线模式、日志位置和错误处理见 [统一安装与自检说明](skills/auto-cantonese-subtitles/references/runtime-setup.md)。脚本不修改全局下载源或安全设置。模型受各自仓库条款约束，权重不随本仓库发布。
+
+本轮在Mac独立环境验证了双模型短样本、音频解码、多窗口续接和SRT导出；具体范围与限制见 [运行验证记录](skills/auto-cantonese-subtitles/references/validation.md)。其他平台仍需首次自检。
 
 ### 识别入口与长片处理
 
@@ -104,12 +104,21 @@ python skills/auto-cantonese-subtitles/scripts/transcribe.py sample.mp4 \
 
 python skills/auto-cantonese-subtitles/scripts/transcribe.py sample.mp4 \
   --engine qwen --model /path/to/qwen-snapshot \
-  --aligner /path/to/aligner-snapshot --device cpu --output outputs/qwen.json
+  --device cpu --output outputs/qwen.json
 ```
+
+上面的命令也应使用安装入口记录的实际Python解释器。Qwen默认仅提供文字用于交叉校准，时间定位参考Whisper和原音频；需要额外对齐时才指定可选的`--aligner`。
 
 Qwen 确认支持后可选 `--device mps` 或 `--device cuda`；Whisper 可选 CPU 或 CUDA，不支持 MPS。两份结果应依次生成。
 
-**当前 `transcribe.py` 限制为180秒内的样本。** 长片由智能体按有上下文重叠的语音窗口分别识别，记录每段起点偏移、去重并检查接缝。现有长片测试不是用短样本入口直接跑完整视频。具体执行规则见 [本地测试说明](skills/auto-cantonese-subtitles/references/local-testing.md)。
+**`transcribe.py`处理180秒内样本；长片使用固定入口，无需AI临时写切片循环：**
+
+```sh
+python skills/auto-cantonese-subtitles/scripts/transcribe_long.py source.mp4 \
+  --manifest /absolute/models.local.json --output-dir outputs/long-run
+```
+
+它会管理窗口编号、文件名、偏移和已完成结果复用。同一模型在各窗口间复用已加载权重；两模型依次处理。输出仍是待校准的原始结果，接缝差异不会被静默删除，AI需核对后制作SRT。具体规则见 [本地测试说明](skills/auto-cantonese-subtitles/references/local-testing.md)。
 
 遇到开场漏段、异常重复、静音补字或零时长对齐，须裁出对应原音频重新识别或核对。对齐时使用原始粤语转写，不能用改写后的普通话文字直接对齐粤语发音。
 
@@ -201,13 +210,20 @@ skills/auto-cantonese-subtitles/
 ├── references/
 │   ├── editorial-rules.md      语言及术语校准
 │   ├── local-testing.md        本地模型与测试方法
+│   ├── runtime-setup.md        统一安装、自检与日志
+│   ├── validation.md           本轮验证结果与范围
 │   ├── environment-recovery.md 环境复用与故障恢复
 │   ├── task-progress.md        进度清单与中断续接
 │   └── subtitle-layout.md      画幅、断句及输出格式
 └── scripts/
-    ├── requirements.txt
+    ├── requirements.txt        固定关键依赖基线
+    ├── setup_runtime.py        统一准备入口及环境复用
+    ├── check_runtime.py        版本、导入及真实解码自检
+    ├── verify_models.py        模型加载及短音频验证
+    ├── runtime_common.py       进度、日志、超时及独占锁
     ├── prepare_models.py       下载模型并记录快照
     ├── transcribe.py           本地短样本识别
+    ├── transcribe_long.py      长片分窗、偏移与结果复用
     ├── subtitle_profile.py     探测显示画幅
     └── export_srt.py           清理、检查并导出SRT
 ```
