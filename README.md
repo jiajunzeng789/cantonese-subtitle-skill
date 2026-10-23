@@ -14,7 +14,7 @@
 4. 准备好之后提供本地音视频路径，复制“开始制作”指令。只有音频时，还需要说明最终做横屏还是竖屏。
 5. 把收到的 SRT 导入剪辑软件，与原视频一起预览。字体、字号及安全区应与制作时约定一致。
 
-仓库地址：https://github.com/jiajunzeng789/cantonese-subtitle-skill 。私有仓库需要先获得仓库访问权限，再下载或克隆。
+仓库地址：[粤语字幕制作skill](https://github.com/jiajunzeng789/cantonese-subtitle-skill)。仓库已公开，可以直接浏览、下载 ZIP 或克隆。
 
 ```sh
 git clone https://github.com/jiajunzeng789/cantonese-subtitle-skill.git
