@@ -4,6 +4,8 @@
 2. 双击“一键安装.command”，等待所有项目打勾。若macOS首次询问是否打开，按系统提示确认；不要关闭系统安全防护。
 3. 安装完成后，在WorkBuddy等Agent的新对话中提供音视频，说：“用粤语字幕制作skill生成横屏单行简体书面语SRT”。
 
+默认只交付SRT，不烧录字幕、不生成预览视频或抽帧；需要这些额外输出时再明确提出。
+
 适用：苹果芯片M1/M2/M3/M4及以后，macOS 14或更新。建议16GB内存及以上。
 安装包包含Python、FFmpeg/FFprobe、Python依赖、Whisper large-v3、Qwen3-ASR-1.7B、Whisper时间校准工具、完整Skill和自检音频。
 安装无需网络、Homebrew、管理员密码或自行编译；请预留足够磁盘空间（解压后仍需至少约15GB空闲）。

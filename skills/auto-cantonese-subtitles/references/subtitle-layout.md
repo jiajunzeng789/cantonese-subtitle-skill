@@ -29,7 +29,7 @@ python scripts/subtitle_profile.py --media /absolute/audio.mp3 --layout landscap
 
 团队可在profile中增加：display_width/display_height、font_file（本地字体路径）、font_size_px、safe_width_fraction（默认0.8，即两侧合计约20%留白）、letter_spacing_px、stroke_width_px。提供字体和尺寸时，导出器用Pillow测量实际字体宽度，并同时检查预设上限和安全区宽度；需要可选依赖 `Pillow`。未提供字体时只做近似估计，不保证剪辑软件不会自动换行。仅提供字号时可按显示宽度估计可容纳的汉字数量，再与预设上限取较小值。
 
-字体、字号、字距、描边及安全区应与剪辑软件实际设置相同。SRT不可靠承载这些布局参数；即使文本没有换行，软件仍可能自动折行。只有在最终画幅预览后才能声称画面上确实是单行。不要为了预览擅自烧录或覆盖用户原视频。
+字体、字号、字距、描边及安全区应与剪辑软件实际设置相同。SRT不可靠承载这些布局参数；即使文本没有换行，软件仍可能自动折行。默认交付SRT时只检查正文单行及已知字体宽度，说明剪辑软件样式的局限即可，不渲染预览视频、不抽帧。只有用户明确要求画面预览或烧录时才制作额外视频；未实际预览时不宣称已验证最终画面显示。
 
 ## 分句与时间
 
@@ -62,7 +62,7 @@ python scripts/subtitle_profile.py --media /absolute/audio.mp3 --layout landscap
 
 顶层可选配置为 `"display_policy": {"mode": "continuous", "max_gap_seconds": 2, "max_duration_seconds": 7}`。未提供时默认启用。逐条设置 `hold_to_next` 时必须为JSON布尔值。保留用户给定的声音边界/来源字段；脚本只延长显示结束，不改切入、文字、数量或原始 `speech_end` 等字段。延长条目增加 `display_original_end` 与 `display_hold_seconds`，逐条调整原因另存于 `display_adjustments`。
 
-导出器先验证输入时间，零时长、越界、重叠不会被“补到下一条”掩盖。显示时长和阅读速度检查针对最终显示时间，不能据此宣称原文或声学同步已经准确。CLI自动保存同名 `.display.json`；试听视频或其他预览应使用此文件，确保与SRT的时间及清理后的文字一致。
+导出器先验证输入时间，零时长、越界、重叠不会被“补到下一条”掩盖。显示时长和阅读速度检查针对最终显示时间，不能据此宣称原文或声学同步已经准确。CLI自动保存同名 `.display.json` 作为内部记录。仅当用户明确要求试听或预览时才使用此文件生成视频，确保与SRT一致。
 
 ## JSON与调用
 

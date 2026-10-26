@@ -180,6 +180,7 @@ def main():
         work=user/'粤语字幕工作台';work.mkdir(exist_ok=True)
         (work/'开始使用.txt').write_text('安装已完成。在WorkBuddy或其他Agent开启新对话，粘贴：\n\n'
             '请使用“粤语字幕制作skill”处理我提供的素材，输出横屏单行简体书面语SRT，无句读标点，连续讲话时保留到下一条出现。'
+            '只交付SRT，不烧录字幕、不生成预览视频或抽帧。'
             '本机已安装完整离线环境，请读取 ~/.config/cantonese-subtitles/environment.local.json 并复用，不要重新下载或安装。\n\n'
             '将音视频文件交给Agent即可。语音识别在本地，文字校准使用当前Agent的语言模型。\n',encoding='utf-8')
         status('安装和真实语音自检全部通过','passed',workspace=str(work))
