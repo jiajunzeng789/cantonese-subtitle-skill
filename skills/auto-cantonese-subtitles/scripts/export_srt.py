@@ -1,5 +1,6 @@
 """Export single-line SRT after semantic segmentation and source-audio timing."""
 import argparse
+import copy
 import json
 import math
 from pathlib import Path
@@ -80,7 +81,68 @@ def pixel_width(text, profile):
     return font.getlength(text) + max(0, len(text)-1)*tracking + 2*stroke
 
 
+def prepare_display(data):
+    """Extend display ends after validating the original timing; never retime speech."""
+    result = copy.deepcopy(data)
+    cues = result.get('cues')
+    if not isinstance(cues, list) or not cues:
+        raise ValueError('cues must be a nonempty list')
+    duration = float(result['media_duration'])
+    if not math.isfinite(duration) or duration <= 0:
+        raise ValueError('media_duration must be positive and finite')
+    previous_end = 0
+    for i, cue in enumerate(cues, 1):
+        start, end = float(cue['start']), float(cue['end'])
+        if not all(math.isfinite(v) for v in (start, end)):
+            raise ValueError(f'cue {i}: non-finite time')
+        start_ms, end_ms = round(start*1000), round(end*1000)
+        if start < 0 or end > duration or end_ms <= start_ms or start_ms < previous_end:
+            raise ValueError(f'cue {i}: negative/overlapping/out-of-range/empty time')
+        if 'hold_to_next' in cue and not isinstance(cue['hold_to_next'], bool):
+            raise ValueError(f'cue {i}: hold_to_next must be boolean')
+        previous_end = end_ms
+    incoming = result.get('display_policy', {})
+    if not isinstance(incoming, dict):
+        raise ValueError('display_policy must be an object')
+    policy = {'mode': 'continuous', 'max_gap_seconds': 2.0, 'max_duration_seconds': 7.0, **incoming}
+    if policy['mode'] not in ('continuous', 'original'):
+        raise ValueError('display_policy.mode must be continuous or original')
+    gap_limit, duration_limit = float(policy['max_gap_seconds']), float(policy['max_duration_seconds'])
+    if not math.isfinite(gap_limit) or gap_limit < 0 or not math.isfinite(duration_limit) or duration_limit <= 0:
+        raise ValueError('Display gap must be finite/nonnegative and duration finite/positive')
+    result['display_policy'] = policy
+    adjustments = []
+    for i, cue in enumerate(cues):
+        if i == len(cues)-1:
+            reason = 'last_cue'
+        elif policy['mode'] == 'original':
+            reason = 'original_mode'
+        elif cue.get('hold_to_next') is False:
+            reason = 'explicit_boundary'
+        else:
+            next_start = float(cues[i+1]['start'])
+            gap = next_start-float(cue['end'])
+            if gap <= 0:
+                reason = 'already_contiguous'
+            elif gap > gap_limit:
+                reason = 'long_pause'
+            elif next_start-float(cue['start']) > duration_limit:
+                reason = 'duration_limit'
+            else:
+                original_end = cue['end']
+                cue['display_original_end'] = cue.get('display_original_end', original_end)
+                cue['end'] = cues[i+1]['start']
+                cue['display_hold_seconds'] = round(float(cue['end'])-float(cue['display_original_end']), 6)
+                adjustments.append({'cue': i+1, 'original_end': original_end,
+                                    'display_end': cue['end'], 'reason': 'hold_until_next'})
+                continue
+        adjustments.append({'cue': i+1, 'original_end': cue['end'], 'display_end': cue['end'], 'reason': reason})
+    return result, {'policy': policy, 'changed_count': sum(a['reason'] == 'hold_until_next' for a in adjustments),
+                    'cues': adjustments}
+
+
 def render(data):
+    data, _ = prepare_display(data)
     cues = data['cues']
     if not isinstance(cues, list) or not cues:
         raise ValueError('cues must be a nonempty list')
@@ -162,13 +224,24 @@ def main():
     if a.layout:
         # A new final layout must not inherit a stale source canvas/font fit.
         data['subtitle_profile'] = make_profile(layout=a.layout)
-    body, warnings = render(data)
+    prepared, adjustments = prepare_display(data)
+    body, warnings = render(prepared)
+    # The sidecar is the display timeline used by SRT and previews, not an acoustic alignment report.
+    for cue in prepared['cues']:
+        cue['text'] = clean_text(cue['text'], prepared.get('protected_terms', []))
+    prepared['display_adjustments'] = adjustments
+    display_path = a.output.with_suffix('.display.json')
+    if a.output.exists() or display_path.exists():
+        p.error('SRT or display timeline already exists; choose a new output name')
     a.output.parent.mkdir(parents=True, exist_ok=True)
+    with display_path.open('x', encoding='utf-8') as f:
+        json.dump(prepared, f, ensure_ascii=False, indent=2)
     with a.output.open('x', encoding='utf-8', newline='\n') as f:
         f.write(body)
     for warning in warnings:
         print('REVIEW:', warning)
     print('Single-line SRT exported. Meaning, speaker turns and synchronization still need review.')
+    print(f'Display ends extended: {adjustments["changed_count"]}; starts unchanged. Timeline: {display_path.resolve()}')
     print(a.output.resolve())
 
 
