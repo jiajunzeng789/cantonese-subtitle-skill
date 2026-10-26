@@ -139,6 +139,8 @@ def collect(root, run):
 
 
 def main():
+    from runtime_common import activate_local_tools
+    activate_local_tools()
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('media', type=Path, nargs='?')
     p.add_argument('--manifest', type=Path)

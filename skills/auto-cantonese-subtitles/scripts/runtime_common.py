@@ -13,6 +13,26 @@ import time
 from urllib.parse import urlsplit
 
 
+def activate_local_tools():
+    """Use tools from the offline installer without changing shell/system PATH settings."""
+    candidates = []
+    if os.environ.get('CANTONESE_SUBTITLES_TOOLS'):
+        candidates.append(Path(os.environ['CANTONESE_SUBTITLES_TOOLS']))
+    record = Path.home()/'.config/cantonese-subtitles/environment.local.json'
+    try:
+        saved = json.loads(record.read_text())
+        if saved.get('tools_bin'):
+            candidates.append(Path(saved['tools_bin']))
+    except (OSError, ValueError, TypeError):
+        pass
+    for directory in candidates:
+        if all((directory/name).is_file() and os.access(directory/name, os.X_OK) for name in ('ffmpeg', 'ffprobe')):
+            current = os.environ.get('PATH', os.defpath).split(os.pathsep)
+            os.environ['PATH'] = os.pathsep.join([str(directory)]+[p for p in current if p != str(directory)])
+            return directory
+    return None
+
+
 def now():
     return datetime.now(timezone.utc).isoformat()
 

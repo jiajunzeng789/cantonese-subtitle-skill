@@ -78,6 +78,8 @@ def probe(path):
 
 
 def main():
+    from runtime_common import activate_local_tools
+    activate_local_tools()
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--media', type=Path)
     p.add_argument('--layout', choices=list(PRESETS))

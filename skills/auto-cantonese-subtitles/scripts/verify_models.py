@@ -6,10 +6,11 @@ from pathlib import Path
 import sys
 import time
 import wave
-from runtime_common import Progress, SetupLock, atomic_json, run_logged
+from runtime_common import Progress, SetupLock, atomic_json, run_logged, activate_local_tools
 
 
 def main():
+    activate_local_tools()
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--manifest', type=Path, required=True)
     p.add_argument('--workspace', type=Path, required=True)

@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import time
-from runtime_common import Progress, now
+from runtime_common import Progress, now, activate_local_tools
 
 
 def qwen_load(a):
@@ -23,6 +23,7 @@ def qwen_load(a):
 
 
 def process(a, progress, model_cache=None):
+    activate_local_tools()
     os.environ['HF_HUB_OFFLINE'] = '1'
     os.environ['TRANSFORMERS_OFFLINE'] = '1'
     os.environ['TOKENIZERS_PARALLELISM'] = 'false'

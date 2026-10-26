@@ -1,5 +1,13 @@
 # 统一安装与自检入口
 
+## 苹果芯片Mac离线一键安装
+
+拿到完整离线ZIP后解压，双击其中“一键安装.command”。包含Python、FFmpeg/FFprobe、全部wheel、两个识别模型及自检音频，不依赖Homebrew、系统Python或现场编译；适用于macOS 14及以上的Apple Silicon。源码仓库中的command不包含这些大文件，不能单独复制当作完整安装包。
+
+安装完成后在Agent新对话中提供素材。运行环境记录位于 `~/.config/cantonese-subtitles/environment.local.json`，包含实际解释器、`tools_bin` 和 `models_manifest`；模型在用户的Application Support下，不一定出现在Hugging Face默认缓存。`prepare_models.py`会先复用安装记录中的完整模型，其他媒体脚本按记录自动启用捆绑工具，无需修改全局PATH。离线安装是环境准备；文字校准仍由Agent完成，使用在线Agent不等于文字也离线。
+
+安装器有校验、日志和恢复入口，已有Skill源文件修改会先备份。安装包未经Developer ID签名/公证，首次打开是否需要macOS额外确认取决于系统与下载来源；不以关闭系统防护作为安装步骤。
+
 所有路径示例都需替换成本机实际路径。以下命令从Skill目录执行；在仓库根目录时给脚本加上 `skills/auto-cantonese-subtitles/` 前缀。安装入口仅依赖标准库，可由已有Python直接启动，无需先手动安装Qwen依赖。
 
 ## 1. 检查、复用或安装

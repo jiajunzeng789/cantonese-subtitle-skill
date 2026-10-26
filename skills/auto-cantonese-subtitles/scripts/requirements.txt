@@ -21,3 +21,8 @@ gradio==6.9.0
 gradio-client==2.3.0
 numba==0.63.1
 llvmlite==0.46.0
+stable-ts==2.19.1
+openai-whisper==20250625
+torchaudio==2.10.0
+tiktoken==0.14.0
+more-itertools==11.2.1

@@ -10,10 +10,11 @@ import sys
 import tempfile
 import traceback
 import wave
-from runtime_common import atomic_json, classify_error, now
+from runtime_common import atomic_json, classify_error, now, activate_local_tools
 
 
 def check(workspace):
+    activate_local_tools()
     workspace = Path(workspace)
     workspace.mkdir(parents=True, exist_ok=True)
     out = {'python_executable': sys.executable, 'python_version': platform.python_version(),

@@ -9,7 +9,7 @@ import signal
 import subprocess
 import sys
 from urllib.parse import urlsplit
-from runtime_common import Progress, SetupLock, atomic_json, index_url, now, run_logged
+from runtime_common import Progress, SetupLock, atomic_json, index_url, now, run_logged, activate_local_tools
 
 HERE = Path(__file__).resolve().parent
 TUNA = 'https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple'
@@ -38,6 +38,7 @@ def candidates(a, state):
 
 
 def main():
+    activate_local_tools()
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--workspace', type=Path, required=True)
     p.add_argument('--python', type=Path, help='Existing runtime candidate; never modified by this script')
@@ -146,7 +147,7 @@ def main():
                     # machines that have not explicitly selected CUDA.
                     run_logged([selected, '-m', 'pip', 'install', '--index-url',
                                 'https://download.pytorch.org/whl/cpu', '--only-binary=:all:',
-                                '--no-deps', '--retries', '1', '--timeout', '30', 'torch==2.10.0'],
+                                '--no-deps', '--retries', '1', '--timeout', '30', 'torch==2.10.0', 'torchaudio==2.10.0'],
                                progress, 'torch_cpu', logs, env=env, timeout=a.timeout)
                 run_logged(base+['--only-binary=av,torch,numpy,nagisa,DyNet38,tokenizers',
                                  '-r', HERE/'requirements.txt'], progress, 'qwen_dependencies', logs,

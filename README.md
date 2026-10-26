@@ -1,5 +1,9 @@
 # 粤语字幕制作skill
 
+**苹果芯片Mac同事拿到完整离线安装包后：解压 → 双击“一键安装.command” → 等全部检查通过 → 在WorkBuddy新对话里提供素材。** Python、媒体工具、依赖和模型均随包安装，无需自己敲命令。适用macOS 14及以上；首次打开可能需要系统确认。
+
+离线包体积较大，和源码ZIP是两个文件；源码仓库不包含模型。打包与安装说明见 [macos目录](macos/README.md)。其他安装方式见下方。
+
 ## 用 WorkBuddy 等国产 AI Agent 怎么做字幕？
 
 在 **WorkBuddy、QoderWork、TRAE** 等能读取本地文件、执行程序的桌面 AI Agent 中，可以参照下面的通用流程。音视频在本地识别，文字校准使用当前 Agent 的语言模型。
@@ -122,6 +126,8 @@ python skills/auto-cantonese-subtitles/scripts/transcribe_long.py source.mp4 \
 它会管理窗口编号、文件名、偏移和已完成结果复用。同一模型在各窗口间复用已加载权重；两模型依次处理。输出仍是待校准的原始结果，接缝差异不会被静默删除，AI需核对后制作SRT。具体规则见 [本地测试说明](skills/auto-cantonese-subtitles/references/local-testing.md)。
 
 遇到开场漏段、异常重复、静音补字或零时长对齐，须裁出对应原音频重新识别或核对。对齐时使用原始粤语转写，不能用改写后的普通话文字直接对齐粤语发音。
+
+已校正粤语原文且需要重定位时，使用 `scripts/realign_subtitles.py`，每条同时保留原话`original`与书面语`text`；复用现有Whisper权重，具体调用及失败处理见本地测试说明。用户已经确认切入时不要重跑，仅由导出器调整显示结束。
 
 ### 画幅和导出
 

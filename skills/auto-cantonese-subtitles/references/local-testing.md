@@ -46,3 +46,17 @@ python scripts/transcribe_long.py /absolute/source.mp4 \
 ## 非语音保护
 
 已观察到 Qwen 直接处理纯静音时可能生成“係。”。测试入口使用本地 Silero VAD，纯非语音输入不送入识别；保留语音区间供检查。VAD 也可能漏掉低音量发言，若用户确认有声音而输出为空，必须回听并复核检测设置，不把空结果当作正确。混合语音/静音仍须检查凭空补字。
+
+## Whisper原话时间校准
+
+`realign_subtitles.py`使用现有Whisper large-v3权重与固定stable-ts工具，对原始粤语短句重新定位；无需Qwen ForcedAligner权重。工作JSON沿用导出schema，每条增加 `original` 字段，保存与原声一致的粤语而非书面语。`start/end`先填写对应原始Whisper区间作为候选锚点；`text`保存待显示的书面语。超过26秒的单个原话单元须先按语义与原声分段，不能平均分配时间。
+
+```sh
+python scripts/realign_subtitles.py --media source.mp3 --input edited.json \
+  --model /absolute/whisper-snapshot --output aligned.review.json
+python scripts/export_srt.py aligned.review.json output.review.srt
+```
+
+脚本在22秒左右的窗口内对齐并保留原文映射、媒体偏移和原候选；窗口结果缓存于同名`.alignment`目录，输入或脚本指纹不一致时拒绝续用。零时长、极短或明显错位只作一次局部重对齐；仍异常则保留输入候选并标记待审，相邻冲突也不得静默挪动切入。检查 `alignment_review` 后列入交付疑点。使用工具输出不等于人工同步验收。
+
+stable-ts当前使用固定2.19.1版本，其上游已归档；本项目保留固定调用及样本验证，不承诺任意新版本兼容。语音定位与后续连续显示是不同步骤：先输出原话边界，导出器再设置显示结束。用户已经确认切入、只改结束显示时，直接导出，不重跑此校准步骤。

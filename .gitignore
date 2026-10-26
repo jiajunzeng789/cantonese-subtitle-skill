@@ -24,3 +24,8 @@ test-media/
 *.bin
 *.pt
 *.pth
+dist/
+wheelhouse/
+*.whl
+*.zip
+*.tar.xz
