@@ -51,7 +51,25 @@ def copy_tree(source, target):
         # APFS clone avoids duplicating model storage when supported. It is not required.
         r=subprocess.run(['/bin/cp','-cRp',str(source),str(target)],capture_output=True)
         if r.returncode==0:return
-    shutil.copytree(source,target,symlinks=True,dirs_exist_ok=True)
+    # copytree(symlinks=True, dirs_exist_ok=True) still fails on an existing
+    # symlink. Merge explicitly so interrupted/repeated installs can continue.
+    def merge(src,dst):
+        if src.is_symlink():
+            link=os.readlink(src)
+            if dst.is_symlink():
+                if os.readlink(dst)==link:return
+                dst.unlink()
+            elif dst.exists():raise RuntimeError(f'链接位置存在普通文件，不覆盖：{dst}')
+            dst.symlink_to(link,target_is_directory=src.is_dir())
+        elif src.is_dir():
+            if dst.is_symlink():raise RuntimeError(f'目标目录是意外链接，不跟随：{dst}')
+            dst.mkdir(parents=True,exist_ok=True)
+            for item in src.iterdir():merge(item,dst/item.name)
+        else:
+            if dst.is_symlink():raise RuntimeError(f'目标文件是意外链接，不跟随：{dst}')
+            if dst.is_file() and dst.stat().st_size==src.stat().st_size and digest(dst)==digest(src):return
+            shutil.copy2(src,dst)
+    merge(source,target)
 
 
 def main():

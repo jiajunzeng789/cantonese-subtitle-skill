@@ -27,3 +27,5 @@ python3 macos/build_offline.py \
 tools目录中需有bin/ffmpeg与bin/ffprobe。模型文件必须完整，不能只复制HF缓存的符号链接。自检音频使用合成测试句，不打包用户录音。打包脚本记录每个文件SHA-256，生成ZIP64和整包校验文件；不把模型或私有转写提交Git。
 
 在另一个用户目录和带空格的安装路径完成实际安装，验证离线pip、解码、双模型加载和短音频识别，以及再次安装时的环境/模型复用。还需验证ZIP解压后可执行权限及独立Python链接完整，不能只验证构建目录能运行。
+
+维护者检查：`python -m unittest discover -s skills/auto-cantonese-subtitles/tests -v`（23项）和 `python -m unittest discover -s macos/tests -v`（2项）。本次修复并实测了已有Python符号链接的重复安装；匹配链接与完整文件直接复用，不覆盖意外的目标链接。
